@@ -9,6 +9,7 @@ html,
 body {
   background: #f0f1f3;
   color: #183153;
+  cursor: default;
   font-family: Helvetica, Arial, sans-serif;
   margin: 0;
   -webkit-font-smoothing: antialiased;
