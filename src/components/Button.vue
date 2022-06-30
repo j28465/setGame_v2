@@ -1,14 +1,15 @@
 <template>
-  <button type="button" @click="emit('onClick')">{{ props.title }}</button>
+  <button type="button" @click="emit('onClick')" :style="props.style">{{ props.title }}</button>
 </template>
 
 <script setup lang="ts">
 // eslint-disable-next-line no-undef
 const props = defineProps({
   title: { type: String, required: true },
+  style: { type: String },
 });
 // eslint-disable-next-line no-undef
-const emit = defineEmits(["onClick"]);
+const emit = defineEmits(['onClick']);
 </script>
 
 <style lang="scss">

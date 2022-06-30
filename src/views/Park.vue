@@ -1,32 +1,55 @@
 <template>
-  <Msg></Msg>
+  <Msg @closeMsgBox="msg.open = false" :open="msg.open" :title="msg.title"></Msg>
+  <Msg @closeMsgBox="queMsg.open = false" :open="queMsg.open" :title="queMsg.title" :btnL="queMsg.btnL" :btnR="queMsg.btnR" @clickBtnL="home" @clickBtnR="reStart"></Msg>
   <div id="park">
     <div id="menu">
       <div id="menuBlock">
         <div>
-          <Button title="重新開始" name="start" @onClick="start"></Button>
-          <Button title="提示or無解答" name="start" @onClick="hintClick"></Button>
-          <Button title="剩下牌組" name="start" @onClick="$router.push('remaining')"></Button>
+          <Button title="重選等級" @onClick="home"></Button>
+          <Button title="重新開始" @onClick="start"></Button>
+          <Button title="提示" @onClick="hint"></Button>
+          <Button title="無解答" @onClick="noAns"></Button>
+          <Button title="查看剩餘牌組" @onClick="$router.push('remaining')"></Button>
         </div>
         <div id="subMenu">剩下{{ lib.cards.length }}張牌</div>
       </div>
     </div>
     <div id="tableBoard" ref="tableBoard">
       <div id="tableBlock">
-        <Card v-for="c in lib.tableTopCards" :key="c" :v="c.join(',')" @chooseCard="choose"></Card>
+        <Card v-for="c in lib.tableTopCards" :key="c" :v="c.join(',')" @chooseCard="choose" :lock="isItemInArray(clickCards, c) >= 0"></Card>
       </div>
     </div>
   </div>
+  <div id="lockBox" v-show="lockState"><div id="lockBg"></div></div>
 </template>
 
 <script setup lang="ts">
-import Button from "../components/Button.vue";
-import Card from "../components/Card.vue";
-import Msg from "../components/MsgBox.vue";
-import { onMounted, ref } from "vue-demi";
-import { libStore } from "../store/lib";
-import router from "@/router";
+import Button from '../components/Button.vue';
+import Card from '../components/Card.vue';
+import Msg from '../components/MsgBox.vue';
+import { onMounted, ref } from 'vue-demi';
+import { libStore } from '../store/lib';
+import { msgPack } from '../models/msgModels';
+import router from '@/router';
 const lib = libStore();
+//msgBox
+const msg = ref<msgPack>({ open: false, title: '', btnL: null, btnR: null, desc: null });
+const queMsg = ref<msgPack>({ open: false, title: '', btnL: null, btnR: null, desc: null });
+const openMsg = (box: msgPack, title: string, desc: string | null = null, btnL: string | null = null, btnR: string | null = null) => {
+  box.title = title;
+  box.desc = desc;
+  box.btnL = btnL;
+  box.btnR = btnR;
+  box.open = true;
+};
+//遊戲結束重新發牌
+const reStart = () => {
+  start();
+  queMsg.value.open = false;
+};
+//遮罩
+const lockState = ref<boolean>(false);
+//等級
 const levelClass = ref<number[][]>([
   [2, 1],
   [2, 2],
@@ -36,14 +59,28 @@ const levelClass = ref<number[][]>([
 //牌桌ELEMENT
 const tableBoard = ref<HTMLFormElement | null>(null);
 //已選擇的牌
-const clickAry = ref<number[][]>([]);
+const clickCards = ref<number[][]>([]);
 //提示的牌
 const hintCards = ref<number[][]>([]);
+//二維陣列indexOf
+const isItemInArray = (array: number[][], item: number[]): number => {
+  for (var i = 0; i < array.length; i++) {
+    if (array[i][0] == item[0] && array[i][1] == item[1] && array[i][2] == item[2] && array[i][3] == item[3]) {
+      return i;
+    }
+  }
+  return -1;
+};
 onMounted(() => {
   if (lib.level > 0) {
     if (lib.tableTopCards.length == 0) start();
-  } else router.push("/");
+  } else router.push('/');
 });
+//重選等級
+const home = () => {
+  lib.tableTopCards.length = 0;
+  router.push('/');
+};
 //重新發牌
 const start = () => {
   pushCard();
@@ -85,49 +122,32 @@ const shuffleCards = () => {
     lib.cards[index] = tmp;
   }
 };
-//發牌
+//依照要求張數發牌
 const dealCards = (index: number) => {
   for (let i = 0; i < index; ++i) {
     lib.tableTopCards.push(lib.cards.pop() as number[]);
   }
 };
-//清空或在同位置放上新的牌
-const changeCard = (index: number) => {
-  let c = lib.cards.pop();
-  lib.tableTopCards[index] = c ? c : [];
-};
-//移除這張牌
-const removeCard = (index: number) => {
-  lib.tableTopCards.splice(index, 1);
-};
-//符合答案的提示牌組
-const pushHintCards = (card: number[][]): void => {
-  hintCards.value = [];
-  card.forEach((index: number[]) => {
-    hintCards.value.push(index);
-  });
-};
 //選取card
 const choose = (event: any) => {
   //選取的card
   let target: HTMLElement = event;
-  while (!target.classList.contains("card")) {
+  while (!target.classList.contains('card')) {
     target = target.parentNode as HTMLElement;
   }
   //值
-  let ary = target.getAttribute("data-ary");
+  let ary = target.getAttribute('data-ary');
   if (ary) {
-    if (target.classList.contains("lock")) {
+    let target = ary.split(',').map((v) => parseInt(v)) as number[];
+    let index = isItemInArray(clickCards.value, target);
+    if (index >= 0) {
       //取消選擇
-      var index = clickAry.value.indexOf(ary.split(",").map((v) => parseInt(v)) as number[]);
-      clickAry.value.splice(index, 1);
-      target.classList.remove("lock");
+      clickCards.value.splice(index, 1);
     } else {
-      clickAry.value.push(ary.split(",").map((v) => parseInt(v)) as number[]);
-      target.classList.add("lock");
-      if (clickAry.value.length == 3) {
+      clickCards.value.push(target);
+      if (clickCards.value.length == 3) {
         //檢查所選牌組是否符合
-        let jdg: boolean = verify(clickAry.value);
+        let jdg: boolean = verify(clickCards.value);
         //清空、(發牌)、解除反灰
         distribute(jdg);
       }
@@ -153,101 +173,143 @@ const verify = (ary: number[][]): boolean => {
 };
 //補牌
 const distribute = (jdg = true): void => {
-  //清空
-  clickAry.value = [];
-  //答對
   if (jdg) {
+    //答對
+    lockState.value = true;
     setTimeout(() => {
-      //被刪除的牌INDEX
-      let rmIndex = 0;
-      document.querySelectorAll("#tableBoard .card").forEach((e, i) => {
-        if (e.classList.contains("lock")) {
-          if (lib.tableTopCards.length > 12) {
-            //刪除外框
-            e.remove();
-            //清除現在檯面上被選走的牌
-            removeCard(i - rmIndex);
-            rmIndex++;
-          } else {
-            //清空或在同位置放上新的牌
-            changeCard(i);
-            let len: number[][] = lib.tableTopCards.filter((v: number[]) => v.length != 0);
-            if (len.length == 0) lib.openMsg("遊戲結束");
+      clickCards.value.forEach((e) => {
+        //答對的牌Index
+        let index: number = isItemInArray(lib.tableTopCards, e);
+        if (lib.tableTopCards.length > 12) {
+          //超過12，刪除答對的牌
+          lib.tableTopCards.splice(index, 1);
+        } else {
+          //下一張要發的牌
+          let nextCard: number[] = lib.cards.length > 0 ? (lib.cards.pop() as number[]) : [];
+          //清空或在同位置放上新的牌
+          lib.tableTopCards.splice(index, 1, nextCard);
+          //檢查是否破關
+          let len: number[][] = lib.tableTopCards.filter((v: number[]) => v.length != 0);
+          if (len.length == 0) {
+            //lib.openMsg('恭喜清空破關');
+            openMsg(queMsg.value, '恭喜清空破關', '', '重選等級', '再玩一次');
           }
         }
       });
-      //解除反灰
-      document.querySelectorAll("#tableBoard div.lock").forEach(function (e) {
-        e.classList.remove("lock");
-      });
+      clickCards.value = [];
+      lockState.value = false;
     }, 500);
   } else {
-    //解除反灰
+    //答錯
+    lockState.value = true;
     setTimeout(function () {
-      document.querySelectorAll("#tableBoard div.lock").forEach(function (e) {
-        e.classList.remove("lock");
-      });
+      clickCards.value = [];
+      lockState.value = false;
     }, 300);
-    lib.openMsg("答錯ㄌ");
+    // lib.openMsg('答錯ㄌ');
+    openMsg(msg.value, '答錯ㄌ');
   }
 };
-//提示or無解答
-const hintClick = (): void => {
-  if (hintCards.value.length > 0) {
-    //選擇第二或三張牌
-    let target: number[] = hintCards.value.pop() as number[];
-    clickAry.value.push(target);
-    document.querySelectorAll("#tableBoard div[data-ary='" + target.join(",") + "']")[0].classList.add("lock");
-    //第三張牌的話，清空、(發牌)、解除反灰
-    if (hintCards.value.length == 0) distribute();
+//提示
+const hint = () => {
+  let ansCards: number[][] = createAns();
+  if (ansCards.length > 0) {
+    //有答案
+    if (clickCards.value) {
+      //有選擇牌
+      clickCards.value.forEach((e, i) => {
+        let index = isItemInArray(ansCards, e);
+        if (index < 0) {
+          //取消選擇
+          clickCards.value.splice(i, 1);
+        } else {
+          //已選擇, 刪除解答的牌
+          ansCards.splice(index, 1);
+        }
+      });
+    }
+    //選擇
+    clickCards.value.push(ansCards.pop() as number[]);
+    //三張
+    if (ansCards.length == 0) distribute(true);
   } else {
-    let jdg = false;
-    //產生一組解答
-    let len = lib.tableTopCards.length;
-    for (let t1 = 0; t1 < len; ++t1) {
-      if (lib.tableTopCards[t1].length > 0) {
-        for (let t2 = t1 + 1; t2 < len; ++t2) {
-          if (lib.tableTopCards[t2].length > 0) {
-            for (let t3 = t2 + 1; t3 < len; ++t3) {
-              if (lib.tableTopCards[t3].length > 0) {
-                let tmp: number[][] = [lib.tableTopCards[t1], lib.tableTopCards[t2], lib.tableTopCards[t3]];
-                jdg = verify(tmp);
+    //沒答案發牌
+    if (lib.cards.length > 0) {
+      dealCards(3);
+    } else {
+      //clearInterval(Timer);
+      // lib.openMsg('遊戲結束');
+      openMsg(queMsg.value, '遊戲結束', '', '重選等級', '再玩一次');
+    }
+  }
+};
+//沒答案
+const noAns = () => {
+  let ansCards = createAns();
+  if (ansCards.length > 0) {
+    // lib.openMsg('有答案');
+    openMsg(msg.value, '有答案');
+  } else {
+    // lib.openMsg('沒答案');
+    openMsg(msg.value, '沒答案');
+  }
+};
+//產生答案
+function createAns(): number[][] {
+  let jdg = false;
+  let UnClickCards: number[][] = [];
+  let tmp: number[][] = Array.from(clickCards.value);
+  //還沒被選到的牌
+  if (clickCards.value.length > 0) {
+    lib.tableTopCards.forEach((e) => {
+      if (e.length > 0 && isItemInArray(clickCards.value, e) < 0) UnClickCards.push(e);
+    });
+  } else UnClickCards = Array.from(lib.tableTopCards.filter((v) => v.length > 0));
 
-                if (jdg) {
-                  pushHintCards(tmp);
-                  break;
-                }
-              }
-            }
+  switch (tmp.length) {
+    case 0:
+      for (let t1 = 0; t1 < UnClickCards.length; ++t1) {
+        for (let t2 = t1 + 1; t2 < UnClickCards.length; ++t2) {
+          for (let t3 = t2 + 1; t3 < UnClickCards.length; ++t3) {
+            tmp = clickCards.value.slice();
+            tmp.push(UnClickCards[t1], UnClickCards[t2], UnClickCards[t3]);
+            jdg = verify(tmp);
             if (jdg) break;
           }
+          if (jdg) break;
         }
         if (jdg) break;
       }
-    }
-    //有無解答
-    if (jdg) {
-      //清空所選
-      clickAry.value = [];
-      //解除全部反灰
-      document.querySelectorAll("#tableBoard div.lock").forEach(function (e) {
-        e.classList.remove("lock");
-      });
-      //選擇第一張牌
-      hintClick();
-    } else {
-      //沒答案發牌
-      if (lib.cards.length > 0) {
-        dealCards(3);
-      } else {
-        //clearInterval(Timer);
-        lib.openMsg("遊戲結束");
+      break;
+    case 1:
+      for (let t2 = 0; t2 < UnClickCards.length; ++t2) {
+        for (let t3 = t2 + 1; t3 < UnClickCards.length; ++t3) {
+          tmp = clickCards.value.slice();
+          tmp.push(UnClickCards[t2], UnClickCards[t3]);
+          jdg = verify(tmp);
+          if (jdg) break;
+        }
+        if (jdg) break;
       }
-    }
+      break;
+    case 2:
+      for (let t3 = 0; t3 < UnClickCards.length; ++t3) {
+        tmp = clickCards.value.slice();
+        tmp.push(UnClickCards[t3]);
+        jdg = verify(tmp);
+        if (jdg) break;
+      }
+      break;
   }
-};
+  //依照玩家所選擇的找不到解答
+  if (!jdg && clickCards.value.length > 0) {
+    clickCards.value.length = 0;
+    return createAns();
+  } else {
+    return jdg ? tmp : [];
+  }
+}
 </script>
-
 <style lang="scss">
 @media (min-width: 35rem) {
   #menuBlock,
@@ -280,15 +342,17 @@ const hintClick = (): void => {
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-start;
-      .card {
-        &.lock {
-          > div {
-            background: #ffd43b;
-            border-color: #146ebe;
-          }
-        }
-      }
     }
+  }
+}
+#lockBox {
+  z-index: 999;
+  #lockBg {
+    height: 100vh;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100vw;
   }
 }
 </style>

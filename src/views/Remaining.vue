@@ -14,14 +14,13 @@
 </template>
 
 <script setup lang="ts">
-import Button from "../components/Button.vue";
-import Card from "@/components/Card.vue";
-import { libStore } from "../store/lib";
-import router from "@/router";
+import Button from '../components/Button.vue';
+import Card from '@/components/Card.vue';
+import { libStore } from '../store/lib';
+import router from '@/router';
 const lib = libStore();
 const back = () => {
-  console.log("back");
-  router.push("/Park");
+  router.push('/Park');
 };
 </script>
 

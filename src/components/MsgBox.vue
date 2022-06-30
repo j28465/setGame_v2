@@ -1,22 +1,55 @@
 <template>
-  <div class="msgBox" v-show="lib.msgState">
+  <div class="msgBox" v-show="open">
     <div class="msgBg"></div>
     <div class="msgLayout">
+      <div class="msgClose">
+        <b @click="emit('closeMsgBox')">x</b>
+      </div>
+      <div class="msgTitle">{{ props.title }}</div>
+      <div class="msgDesc">{{ props.desc }}</div>
+      <div class="msgCmd">
+        <div>
+          <span v-if="props.btnL != null"><Button style="padding: 4px 16px" :title="props.btnL" @onClick="emit('clickBtnL')"></Button></span>
+        </div>
+        <div>
+          <span v-if="props.btnR != null"><Button style="padding: 4px 16px" :title="props.btnR" @onClick="emit('clickBtnR')"></Button></span>
+        </div>
+      </div>
+    </div>
+    <!-- <div class="msgLayout">
       <div class="msgClose">
         <b @click="lib.msgState = false">x</b>
       </div>
       <div class="msgTitle">{{ lib.msgTitle }}</div>
       <div class="msgDesc">{{ lib.msgDesc }}</div>
       <div class="msgCmd">
-        <slot name="cmd"></slot>
+        <div>
+          <span v-if="props.btnL != null"><Button style="padding: 4px 16px" :title="props.btnL" @onClick="emit('clickBtnL')"></Button></span>
+        </div>
+        <div>
+          <span v-if="props.btnR != null"><Button style="padding: 4px 16px" :title="props.btnR" @onClick="emit('clickBtnR')"></Button></span>
+        </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script setup lang="ts">
+import Button from './Button.vue';
 import { libStore } from '../store/lib';
+import { ref } from 'vue-demi';
+// import { msgPack } from '../models/msgModels';
 const lib = libStore();
+// eslint-disable-next-line no-undef
+const props = defineProps({
+  open: { type: Boolean, required: true },
+  title: { type: String, required: true },
+  desc: { type: String },
+  btnL: { type: String },
+  btnR: { type: String },
+});
+// eslint-disable-next-line no-undef
+const emit = defineEmits(['closeMsgBox', 'clickBtnL', 'clickBtnR']);
 </script>
 
 <style lang="scss">
@@ -65,6 +98,8 @@ const lib = libStore();
       //   content: '';
       //   border: 1px solid #146ebe;
       // }
+      display: flex;
+      justify-content: space-between;
     }
   }
 }
