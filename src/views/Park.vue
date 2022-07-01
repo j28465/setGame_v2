@@ -60,8 +60,6 @@ const levelClass = ref<number[][]>([
 const tableBoard = ref<HTMLFormElement | null>(null);
 //已選擇的牌
 const clickCards = ref<number[][]>([]);
-//提示的牌
-const hintCards = ref<number[][]>([]);
 //二維陣列indexOf
 const isItemInArray = (array: number[][], item: number[]): number => {
   for (var i = 0; i < array.length; i++) {
