@@ -16,21 +16,6 @@
         </div>
       </div>
     </div>
-    <!-- <div class="msgLayout">
-      <div class="msgClose">
-        <b @click="lib.msgState = false">x</b>
-      </div>
-      <div class="msgTitle">{{ lib.msgTitle }}</div>
-      <div class="msgDesc">{{ lib.msgDesc }}</div>
-      <div class="msgCmd">
-        <div>
-          <span v-if="props.btnL != null"><Button style="padding: 4px 16px" :title="props.btnL" @onClick="emit('clickBtnL')"></Button></span>
-        </div>
-        <div>
-          <span v-if="props.btnR != null"><Button style="padding: 4px 16px" :title="props.btnR" @onClick="emit('clickBtnR')"></Button></span>
-        </div>
-      </div>
-    </div> -->
   </div>
 </template>
 
@@ -52,14 +37,14 @@ const emit = defineEmits(['closeMsgBox', 'clickBtnL', 'clickBtnR']);
 
 <style lang="scss">
 .msgBox {
-  z-index: 999;
   .msgBg {
     background: rgba(81, 94, 123, 0.5);
-    height: 100vh;
+    height: 100%;
     left: 0;
     position: absolute;
     top: 0;
-    width: 100vw;
+    width: 100%;
+    z-index: 999;
   }
   .msgLayout {
     background-color: #fff;

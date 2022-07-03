@@ -73,8 +73,8 @@ if (props.v.length > 0) {
 
 <style lang="scss">
 @font-face {
-  src: url('../css/fonts/icomoon.eot?v00024'), url('../css/fonts/icomoon.eot?#iefixv00024') format('embedded-opentype'), url('../css/fonts/icomoon.woff?v00024') format('woff'),
-    url('../css/fonts/icomoon.ttf?v00024') format('truetype'), url('../css/fonts/icomoon.svg?v00024#icomoon') format('svg');
+  src: url('../css/cards/icomoon.eot?v00024'), url('../css/cards/icomoon.eot?#iefixv00024') format('embedded-opentype'), url('../css/cards/icomoon.woff?v00024') format('woff'),
+    url('../css/cards/icomoon.ttf?v00024') format('truetype'), url('../css/cards/icomoon.svg?v00024#icomoon') format('svg');
   font: {
     family: 'icomoon';
     style: normal;
@@ -84,10 +84,10 @@ if (props.v.length > 0) {
 .card {
   cursor: pointer;
   font-size: 2.8vw;
-  justify-content: space-between;
-  line-height: 2em;
-  margin: 0.2%;
-  width: 25%-0.4%;
+  display: flex;
+  justify-content: center;
+  margin: 3px 0;
+  width: 25%;
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
@@ -112,28 +112,29 @@ if (props.v.length > 0) {
     -webkit-border-radius: 12px;
     -moz-border-radius: 12px;
     border-radius: 12px;
-    margin: 1px;
-    height: 2em;
+    margin: 0 2px;
+    display: flex;
+    flex-wrap: wrap;
+    height: 113.5px;
+    justify-content: center;
+    align-content: center;
+    width: 65px;
     &:hover {
       border-color: #183153;
     }
     i {
-      font: {
-        family: 'icomoon';
-        style: normal;
-        variant: normal;
+      font-size: 36px;
+    }
+  }
+}
+@media (min-width: 576px) {
+  .card{
+    > div {
+      width: 100%;
+      height: auto;
+      i {
+        line-height: 2em;
       }
-      text-transform: none;
-      margin: 0 1px;
-      -webkit-text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: antialiased;
-      -moz-text-rendering: optimizeLegibility;
-      -moz-font-smoothing: antialiased;
-      -ms-text-rendering: optimizeLegibility;
-      -ms-font-smoothing: antialiased;
-      -o-text-rendering: optimizeLegibility;
-      -o-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
     }
   }
 }

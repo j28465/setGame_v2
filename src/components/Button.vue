@@ -1,11 +1,12 @@
 <template>
-  <button type="button" @click="emit('onClick')" :style="props.style">{{ props.title }}</button>
+  <button type="button" @click="emit('onClick')" :style="props.style"><i v-if="props.icon !== undefined">{{props.icon}}</i>{{ props.title }}</button>
 </template>
 
 <script setup lang="ts">
 // eslint-disable-next-line no-undef
 const props = defineProps({
-  title: { type: String, required: true },
+  title: { type: String },
+  icon: { type: String },
   style: { type: String },
 });
 // eslint-disable-next-line no-undef

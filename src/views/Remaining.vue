@@ -1,12 +1,12 @@
 <template>
   <div id="remain">
-    <div id="menu">
-      <div id="menuBlock">
+    <div id="bar">
+      <div class="block">
         <Button title="回到遊戲" @onClick="back"></Button>
       </div>
     </div>
     <div id="tableBoard">
-      <div id="tableBlock">
+      <div class="block">
         <Card v-for="c in lib.cards" :key="c" :v="c.join(',')"></Card>
       </div>
     </div>
@@ -25,21 +25,20 @@ const back = () => {
 </script>
 
 <style lang="scss">
-@media (min-width: 35rem) {
-  #menuBlock,
-  #block {
-    width: 746px;
-  }
+.blockMax {
+  display: flex;
+  width: 100%;
+  max-width: 746px;
+  padding: 0 10px;
 }
 #remain {
   width: 100%;
-  #menu {
+  #bar {
     background: #fff;
-    padding: 18px 0;
     display: flex;
     justify-content: center;
-    #menuBlock {
-      display: flex;
+    .block {
+      @extend .blockMax;
       font-size: 16px;
       justify-content: space-between;
       align-items: baseline;
@@ -49,10 +48,17 @@ const back = () => {
     display: flex;
     justify-content: center;
     padding-top: 18px;
-    #tableBlock {
-      display: flex;
+    .block {
+      @extend .blockMax;
       flex-wrap: wrap;
       justify-content: flex-start;
+    }
+  }
+}
+@media (min-width: 768px) {
+  #remain {
+    #bar {
+      padding: 18px 0;
     }
   }
 }

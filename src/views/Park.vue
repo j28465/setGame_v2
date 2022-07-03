@@ -2,20 +2,34 @@
   <Msg @closeMsgBox="msg.open = false" :open="msg.open" :title="msg.title"></Msg>
   <Msg @closeMsgBox="queMsg.open = false" :open="queMsg.open" :title="queMsg.title" :btnL="queMsg.btnL" :btnR="queMsg.btnR" @clickBtnL="home" @clickBtnR="reStart"></Msg>
   <div id="park">
-    <div id="menu">
-      <div id="menuBlock">
-        <div>
-          <Button title="重選等級" @onClick="home"></Button>
-          <Button title="重新開始" @onClick="start"></Button>
-          <Button title="提示" @onClick="hint"></Button>
-          <Button title="無解答" @onClick="noAns"></Button>
-          <Button title="查看剩餘牌組" @onClick="$router.push('remaining')"></Button>
+    <div id="bar">
+      <div class="block">
+        <div id="menu">
+          <div id="minMenuBtn"><Button icon="&#xe901;" @onClick="minMeun = true"></Button></div>
+          <div>
+            <Button title="重選等級" @onClick="home"></Button>
+            <Button title="重新開始" @onClick="start"></Button>
+            <Button title="提示" @onClick="hint"></Button>
+            <Button title="無解答" @onClick="noAns"></Button>
+            <Button title="查看剩餘牌組" @onClick="$router.push('remaining')"></Button>
+          </div>
         </div>
         <div id="subMenu">剩下{{ lib.cards.length }}張牌</div>
       </div>
     </div>
-    <div id="tableBoard" ref="tableBoard">
-      <div id="tableBlock">
+    <div id="minMeun">
+      <div id="minMenuBg" v-show="minMeun" @click="minMeun = false"></div>
+      <div id="minMenuBlock" :class="minMeun ? 'open': ''">
+        <div><Button icon="&#xe902;" @onClick="minMeun = false"></Button></div>
+        <div><Button title="重選等級" @onClick="home"></Button></div>
+        <div><Button title="重新開始" @onClick="start(); minMeun = false;"></Button></div>
+        <div><Button title="提示" @onClick="hint(); minMeun = false;"></Button></div>
+        <div><Button title="無解答" @onClick="noAns(); minMeun = false;"></Button></div>
+        <div><Button title="查看剩餘牌組" @onClick="$router.push('remaining'); minMeun = false;"></Button></div>
+      </div>
+    </div>
+    <div id="tableBoard">
+      <div class="block">
         <Card v-for="c in lib.tableTopCards" :key="c" :v="c.join(',')" @chooseCard="choose" :lock="isItemInArray(clickCards, c) >= 0"></Card>
       </div>
     </div>
@@ -56,8 +70,6 @@ const levelClass = ref<number[][]>([
   [3, 2],
   [3, 3],
 ]);
-//牌桌ELEMENT
-const tableBoard = ref<HTMLFormElement | null>(null);
 //已選擇的牌
 const clickCards = ref<number[][]>([]);
 //二維陣列indexOf
@@ -74,6 +86,7 @@ onMounted(() => {
     if (lib.tableTopCards.length == 0) start();
   } else router.push('/');
 });
+const minMeun = ref<boolean>(false);
 //重選等級
 const home = () => {
   lib.tableTopCards.length = 0;
@@ -309,26 +322,75 @@ function createAns(): number[][] {
 }
 </script>
 <style lang="scss">
-@media (min-width: 35rem) {
-  #menuBlock,
-  #tableBlock {
-    width: 746px;
-  }
+.blockMax {
+  display: flex;
+  width: 100%;
+  max-width: 746px;
+  padding: 0 10px;
+}
+.lockBg {
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 999;
 }
 #park {
   width: 100%;
-  #menu {
+  #bar {
     background: #fff;
-    padding: 18px 0;
     display: flex;
     justify-content: center;
-    #menuBlock {
-      display: flex;
+    .block {
+      @extend .blockMax;
       font-size: 16px;
       justify-content: space-between;
       align-items: baseline;
+       #menu {
+        #minMenuBtn {
+          > button {
+            border-width: 0;
+            text-align: left;
+          }
+        }
+        > div {
+          &:last-child {
+            display: none;
+          }
+        }
+      }
       #subMenu {
         margin-right: 4px;
+      }
+    }
+  }
+  #minMeun {
+    left: -100%;
+    #minMenuBg{
+      @extend .lockBg;
+      background: rgba(81, 94, 123, 0.5);
+    }
+    #minMenuBlock {
+      background: #e4e5e9;
+      position: fixed;
+      height: 100%;
+      top: 0;
+      left: -132px;
+      width: 132px;
+      z-index: 1001;
+      transition: 0.4s;
+      transition-timing-function: ease-in-out;
+      > div {
+        > button {
+          background: #e4e5e9;
+          border-width: 0;
+          text-align: left;
+          width: 100%;
+        }
+      }
+      &.open {
+        left: 0;
       }
     }
   }
@@ -336,8 +398,8 @@ function createAns(): number[][] {
     display: flex;
     justify-content: center;
     padding-top: 18px;
-    #tableBlock {
-      display: flex;
+    .block {
+      @extend .blockMax;
       flex-wrap: wrap;
       justify-content: flex-start;
     }
@@ -346,11 +408,26 @@ function createAns(): number[][] {
 #lockBox {
   z-index: 999;
   #lockBg {
-    height: 100vh;
-    left: 0;
-    position: absolute;
-    top: 0;
-    width: 100vw;
+    @extend .lockBg
+  }
+}
+@media (min-width: 768px) {
+  #park {
+    #bar {
+      padding: 18px 0;
+      .block{
+        #menu {
+          > div {
+            &:first-child {
+              display: none;
+            }
+            &:last-child {
+              display: inline-block;
+            }
+          }
+        }
+      }
+    }
   }
 }
 </style>
