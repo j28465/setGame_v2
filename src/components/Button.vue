@@ -1,13 +1,17 @@
 <template>
-  <button type="button" @click="emit('onClick')" :style="props.style"><i v-if="props.icon !== undefined">{{props.icon}}</i>{{ props.title }}</button>
+  <button type="button" @click="emit('onClick')" :style="props.style" :disabled="props.disabled" :class="[props.disabled ? 'lock' : '']">
+    <i v-if="props.icon !== undefined">{{ props.icon }}</i>
+    {{ props.label }}
+  </button>
 </template>
 
 <script setup lang="ts">
 // eslint-disable-next-line no-undef
 const props = defineProps({
-  title: { type: String },
+  label: { type: String },
   icon: { type: String },
   style: { type: String },
+  disabled: { type: Boolean },
 });
 // eslint-disable-next-line no-undef
 const emit = defineEmits(['onClick']);
@@ -27,8 +31,8 @@ button {
   cursor: pointer;
   font-size: 14px;
   padding: 15px 24px;
-  &:hover {
-    border-color: #183153;
+  &.lock {
+    background: #f0f1f3;
   }
   &:first-child {
     -webkit-border-top-left-radius: 8px;
@@ -45,6 +49,14 @@ button {
     -webkit-border-bottom-right-radius: 8px;
     -moz-border-bottom-right-radius: 8px;
     border-bottom-right-radius: 8px;
+  }
+}
+//有Hover功能
+@media (hover: hover) {
+  button {
+    &:hover {
+      border-color: #183153;
+    }
   }
 }
 </style>

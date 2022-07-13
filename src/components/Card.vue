@@ -1,7 +1,8 @@
 <template>
-  <div :data-ary="target.dt" class="card" :class="[target.color, lock ? 'lock' : '']" :style="target.style">
-    <div @click="emit('chooseCard', $event.target)">
+  <div :data-ary="target.dt" :class="['card', target.color, lock ? 'lock' : '']" :style="target.style">
+    <div @click="emit('chooseCard', $event.target)" :class="[hover ? 'hv' : '']">
       <i v-for="i in target.ct" :key="i" v-html="target.iconfont"></i>
+      <i v-if="target.dt === ''"></i>
     </div>
   </div>
 </template>
@@ -12,6 +13,7 @@ import CSS from 'csstype';
 const props = defineProps({
   v: { type: String, required: true },
   lock: { type: Boolean },
+  hover: { type: Boolean },
 });
 // eslint-disable-next-line no-undef
 const emit = defineEmits(['chooseCard']);
@@ -82,7 +84,6 @@ if (props.v.length > 0) {
   }
 }
 .card {
-  cursor: pointer;
   font-size: 2.8vw;
   display: flex;
   justify-content: center;
@@ -115,25 +116,40 @@ if (props.v.length > 0) {
     margin: 0 2px;
     display: flex;
     flex-wrap: wrap;
-    height: 113.5px;
+    height: 132px;
     justify-content: center;
     align-content: center;
-    width: 65px;
-    &:hover {
-      border-color: #183153;
-    }
+    width: 60px;
     i {
       font-size: 36px;
+      margin: 0;
     }
   }
 }
 @media (min-width: 576px) {
-  .card{
+  .card {
     > div {
       width: 100%;
+      max-width: 146px;
       height: auto;
+      flex-wrap: nowrap;
       i {
+        height: 2em;
         line-height: 2em;
+        margin: 0 1px;
+      }
+    }
+  }
+}
+//有Hover功能
+@media (hover: hover) {
+  .card {
+    > div {
+      &.hv {
+        &:hover {
+          cursor: pointer;
+          border-color: #183153;
+        }
       }
     }
   }

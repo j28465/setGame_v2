@@ -2,7 +2,7 @@
   <div id="remain">
     <div id="bar">
       <div class="block">
-        <Button title="回到遊戲" @onClick="back"></Button>
+        <Button label="回到遊戲" @onClick="back" />
       </div>
     </div>
     <div id="tableBoard">

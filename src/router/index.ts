@@ -17,6 +17,10 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Remaining',
     component: () => import('../views/Remaining.vue'),
   },
+  {
+    path: '/:catchAll(.*)*',
+    component: () => import('../views/Error.vue'),
+  },
 ];
 
 const router = createRouter({

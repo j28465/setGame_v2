@@ -1,11 +1,12 @@
 {
-  "name": "set_game_v1",
+  "name": "set_game_v2",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --port 3001",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "deploy": "sh deploy.sh"
   },
   "dependencies": {
     "core-js": "^3.6.5",

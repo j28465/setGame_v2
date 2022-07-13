@@ -1,18 +1,20 @@
 <template>
   <div class="msgBox" v-show="open">
     <div class="msgBg"></div>
-    <div class="msgLayout">
-      <div class="msgClose">
-        <b @click="emit('closeMsgBox')">x</b>
-      </div>
-      <div class="msgTitle">{{ props.title }}</div>
-      <div class="msgDesc">{{ props.desc }}</div>
-      <div class="msgCmd">
-        <div>
-          <span v-if="props.btnL != null"><Button style="padding: 4px 16px" :title="props.btnL" @onClick="emit('clickBtnL')"></Button></span>
+    <div class="msgBlock">
+      <div class="msgLayout">
+        <div class="msgClose">
+          <b @click="emit('closeMsgBox')">x</b>
         </div>
-        <div>
-          <span v-if="props.btnR != null"><Button style="padding: 4px 16px" :title="props.btnR" @onClick="emit('clickBtnR')"></Button></span>
+        <div class="msgTitle" v-html="props.title"></div>
+        <div class="msgDesc" v-html="props.desc"></div>
+        <div class="msgCmd">
+          <div>
+            <span v-if="props.btnL != null"><Button style="padding: 4px 16px" :label="props.btnL" @onClick="emit('clickBtnL')"></Button></span>
+          </div>
+          <div>
+            <span v-if="props.btnR != null"><Button style="padding: 4px 16px" :label="props.btnR" @onClick="emit('clickBtnR')"></Button></span>
+          </div>
         </div>
       </div>
     </div>
@@ -46,43 +48,49 @@ const emit = defineEmits(['closeMsgBox', 'clickBtnL', 'clickBtnR']);
     width: 100%;
     z-index: 999;
   }
-  .msgLayout {
-    background-color: #fff;
-    -webkit-border-radius: 12px;
-    -moz-border-radius: 12px;
-    border-radius: 12px;
-    left: 50%;
-    margin-left: -175px;
-    max-width: 350px;
-    padding: 10px 18px;
+  .msgBlock {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    justify-content: center;
     position: absolute;
-    top: 100px;
-    width: 90%;
-    z-index: 1001;
-    .msgClose {
-      display: flex;
-      justify-content: flex-end;
-      b {
-        color: #c3c6d1;
-        cursor: pointer;
-        font-size: 20px;
+    width: 100%;
+    .msgLayout {
+      background-color: #fff;
+      -webkit-border-radius: 12px;
+      -moz-border-radius: 12px;
+      border-radius: 12px;
+      max-width: 350px;
+      padding: 10px 18px;
+      width: 80%;
+      z-index: 1001;
+      .msgClose {
+        display: flex;
+        justify-content: flex-end;
+        b {
+          color: #c3c6d1;
+          cursor: pointer;
+          font-size: 20px;
+        }
+      }
+      .msgTitle {
+        color: #146ebe;
+        font-size: 16px;
+      }
+      .msgDesc {
+        font-size: 13px;
+        padding-bottom: 23px;
+      }
+      .msgCmd {
+        display: flex;
+        justify-content: space-between;
       }
     }
-    .msgTitle {
-      color: #146ebe;
-      font-size: 16px;
-    }
-    .msgDesc {
-      font-size: 13px;
-      padding-bottom: 23px;
-    }
-    .msgCmd {
-      // &:before {
-      //   content: '';
-      //   border: 1px solid #146ebe;
-      // }
-      display: flex;
-      justify-content: space-between;
+  }
+}
+@media (min-width: 576px) {
+  .msgBox {
+    .msgLayout {
     }
   }
 }

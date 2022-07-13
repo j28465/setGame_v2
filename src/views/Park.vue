@@ -1,36 +1,44 @@
 <template>
-  <Msg @closeMsgBox="msg.open = false" :open="msg.open" :title="msg.title"></Msg>
-  <Msg @closeMsgBox="queMsg.open = false" :open="queMsg.open" :title="queMsg.title" :btnL="queMsg.btnL" :btnR="queMsg.btnR" @clickBtnL="home" @clickBtnR="reStart"></Msg>
+  <Msg
+    @closeMsgBox="msg.open = false"
+    :open="msg.open"
+    :title="msg.title"
+    :btnL="msg.btnL.label === null ? null : msg.btnL.label"
+    :btnR="msg.btnR.label === null ? null : msg.btnR.label"
+    @clickBtnL="clickBtnL"
+    @clickBtnR="clickBtnR"
+  ></Msg>
   <div id="park">
     <div id="bar">
       <div class="block">
         <div id="menu">
-          <div id="minMenuBtn"><Button icon="&#xe901;" @onClick="minMeun = true"></Button></div>
+          <div id="minMenuBtn"><Button icon="&#xe901;" @onClick="minMeun = true" /></div>
           <div>
-            <Button title="重選等級" @onClick="home"></Button>
-            <Button title="重新開始" @onClick="start"></Button>
-            <Button title="提示" @onClick="hint"></Button>
-            <Button title="無解答" @onClick="noAns"></Button>
-            <Button title="查看剩餘牌組" @onClick="$router.push('remaining')"></Button>
+            <Button label="重選等級" @onClick="relevel" />
+            <Button label="重新開始" @onClick="restart" />
+            <Button label="沒答案" @onClick="hint" />
+            <Button label="查看剩餘牌組" @onClick="remaining" :disabled="lib.cards.length === 0" />
           </div>
         </div>
-        <div id="subMenu">剩下{{ lib.cards.length }}張牌</div>
+        <div id="subMenu">
+          {{ time }}<br />
+          剩下{{ lib.cards.length }}張牌
+        </div>
       </div>
     </div>
     <div id="minMeun">
       <div id="minMenuBg" v-show="minMeun" @click="minMeun = false"></div>
-      <div id="minMenuBlock" :class="minMeun ? 'open': ''">
-        <div><Button icon="&#xe902;" @onClick="minMeun = false"></Button></div>
-        <div><Button title="重選等級" @onClick="home"></Button></div>
-        <div><Button title="重新開始" @onClick="start(); minMeun = false;"></Button></div>
-        <div><Button title="提示" @onClick="hint(); minMeun = false;"></Button></div>
-        <div><Button title="無解答" @onClick="noAns(); minMeun = false;"></Button></div>
-        <div><Button title="查看剩餘牌組" @onClick="$router.push('remaining'); minMeun = false;"></Button></div>
+      <div id="minMenuBlock" :class="minMeun ? 'open' : ''">
+        <div><Button icon="&#xe902;" @onClick="minMeun = false" /></div>
+        <div><Button label="重選等級" @onClick="closeMinMenu(relevel)" /></div>
+        <div><Button label="重新開始" @onClick="closeMinMenu(restart)" /></div>
+        <div><Button label="沒答案" @onClick="closeMinMenu(hint)" /></div>
+        <div><Button label="查看剩餘牌組" @onClick="closeMinMenu(remaining)" :disabled="lib.cards.length === 0" /></div>
       </div>
     </div>
     <div id="tableBoard">
       <div class="block">
-        <Card v-for="c in lib.tableTopCards" :key="c" :v="c.join(',')" @chooseCard="choose" :lock="isItemInArray(clickCards, c) >= 0"></Card>
+        <Card v-for="c in lib.tableTopCards" :key="c" :v="c.join(',')" @chooseCard="choose" :lock="isItemInArray(clickCards, c) >= 0" :hover="true"></Card>
       </div>
     </div>
   </div>
@@ -43,23 +51,34 @@ import Card from '../components/Card.vue';
 import Msg from '../components/MsgBox.vue';
 import { onMounted, ref } from 'vue-demi';
 import { libStore } from '../store/lib';
-import { msgPack } from '../models/msgModels';
+import { msgPack, msgBtnPack } from '../models/msgModels';
 import router from '@/router';
 const lib = libStore();
+//遊戲時間
+const time = ref<string>('00:00:00');
+const Timer = ref<number>(0);
+//計時器
+function intervalStart() {
+  Timer.value = setInterval(() => {
+    let t = new Date().getTime() - lib.sDate.getTime();
+    let st = new Date(t);
+    time.value = PadLeft(st.getHours() + lib.timeZone, 2, '0') + ':' + PadLeft(st.getMinutes(), 2, '0') + ':' + PadLeft(st.getSeconds(), 2, '0');
+  }, 1000);
+}
 //msgBox
-const msg = ref<msgPack>({ open: false, title: '', btnL: null, btnR: null, desc: null });
-const queMsg = ref<msgPack>({ open: false, title: '', btnL: null, btnR: null, desc: null });
-const openMsg = (box: msgPack, title: string, desc: string | null = null, btnL: string | null = null, btnR: string | null = null) => {
-  box.title = title;
-  box.desc = desc;
-  box.btnL = btnL;
-  box.btnR = btnR;
-  box.open = true;
+const msg = ref<msgPack>({ open: false, title: '', btnL: { label: null, event: null } as msgBtnPack, btnR: { label: null, event: null } as msgBtnPack, desc: null });
+const openMsg = (v: msgPack) => {
+  msg.value.title = v.title;
+  msg.value.desc = v.desc;
+  msg.value.btnL = v.btnL === undefined ? ({ label: null, event: null } as msgBtnPack) : v.btnL;
+  msg.value.btnR = v.btnR === undefined ? ({ label: null, event: null } as msgBtnPack) : v.btnR;
+  msg.value.open = true;
 };
-//遊戲結束重新發牌
-const reStart = () => {
-  start();
-  queMsg.value.open = false;
+const clickBtnL = () => {
+  if (msg.value.btnL !== null) msg.value.btnL.event();
+};
+const clickBtnR = () => {
+  if (msg.value.btnR !== null) msg.value.btnR.event();
 };
 //遮罩
 const lockState = ref<boolean>(false);
@@ -81,30 +100,41 @@ const isItemInArray = (array: number[][], item: number[]): number => {
   }
   return -1;
 };
+//Menu
+const minMeun = ref<boolean>(false);
 onMounted(() => {
   if (lib.level > 0) {
     if (lib.tableTopCards.length == 0) start();
+    else {
+      time.value = '00:00:00';
+      clearInterval(Timer.value);
+      intervalStart();
+    }
   } else router.push('/');
 });
-const minMeun = ref<boolean>(false);
 //重選等級
 const home = () => {
   lib.tableTopCards.length = 0;
   router.push('/');
 };
-//重新發牌
+//發牌
 const start = () => {
   pushCard();
   shuffleCards();
   dealCards(12);
+  //計時
+  time.value = '00:00:00';
+  clearInterval(Timer.value);
+  lib.sDate = new Date();
+  intervalStart();
 };
 //產生牌組
 const pushCard = () => {
+  //清空
+  lib.cards.length = 0;
+  lib.tableTopCards.length = 0;
   //所選等級
   const lv: number[] = levelClass.value[lib.level - 1];
-  //清空
-  lib.cards = [];
-  lib.tableTopCards = [];
   //形狀
   for (let a = 1; a <= 3; ++a) {
     //顏色
@@ -138,6 +168,69 @@ const dealCards = (index: number) => {
   for (let i = 0; i < index; ++i) {
     lib.tableTopCards.push(lib.cards.pop() as number[]);
   }
+};
+//提示
+const hint = () => {
+  let ansCards: number[][] = createAns();
+  if (ansCards.length > 0) {
+    openMsg({
+      title: '有答案',
+      btnL: {
+        label: '再想想',
+        event: () => {
+          msg.value.open = false;
+        },
+      },
+      btnR: {
+        label: '給我提示',
+        event: () => {
+          //有選擇牌
+          if (clickCards.value) {
+            //選擇的牌是否符合答案
+            clickCards.value.forEach((e, i) => {
+              let index = isItemInArray(ansCards, e);
+              if (index < 0) {
+                //取消選擇
+                clickCards.value.splice(i, 1);
+              } else {
+                //已選擇, 刪除解答的牌
+                ansCards.splice(index, 1);
+              }
+            });
+          }
+          //選擇
+          clickCards.value.push(ansCards.pop() as number[]);
+          //三張
+          if (ansCards.length == 0) distribute(true);
+          msg.value.open = false;
+        },
+      },
+    } as msgPack);
+  } else {
+    //沒答案發牌
+    if (lib.cards.length > 0) {
+      dealCards(3);
+    } else {
+      clearInterval(Timer.value);
+      openMsg({
+        title: time.value + '<br />遊戲結束',
+        btnL: { label: '重選等級', event: home },
+        btnR: {
+          label: '再玩一次',
+          event: again,
+        },
+      } as msgPack);
+    }
+  }
+};
+//查看剩餘牌組
+const remaining = () => {
+  router.push('remaining');
+};
+//關閉小選單
+const closeMinMenu = (func: any) => {
+  func();
+  minMeun.value = false;
 };
 //選取card
 const choose = (event: any) => {
@@ -202,14 +295,21 @@ const distribute = (jdg = true): void => {
           //檢查是否破關
           let len: number[][] = lib.tableTopCards.filter((v: number[]) => v.length != 0);
           if (len.length == 0) {
-            //lib.openMsg('恭喜清空破關');
-            openMsg(queMsg.value, '恭喜清空破關', '', '重選等級', '再玩一次');
+            clearInterval(Timer.value);
+            openMsg({
+              title: time.value + '<br />遊戲結束',
+              btnL: { label: '重選等級', event: home },
+              btnR: {
+                label: '再玩一次',
+                event: again,
+              },
+            } as msgPack);
           }
         }
       });
       clickCards.value = [];
       lockState.value = false;
-    }, 500);
+    }, 300);
   } else {
     //答錯
     lockState.value = true;
@@ -217,52 +317,7 @@ const distribute = (jdg = true): void => {
       clickCards.value = [];
       lockState.value = false;
     }, 300);
-    // lib.openMsg('答錯ㄌ');
-    openMsg(msg.value, '答錯ㄌ');
-  }
-};
-//提示
-const hint = () => {
-  let ansCards: number[][] = createAns();
-  if (ansCards.length > 0) {
-    //有答案
-    if (clickCards.value) {
-      //有選擇牌
-      clickCards.value.forEach((e, i) => {
-        let index = isItemInArray(ansCards, e);
-        if (index < 0) {
-          //取消選擇
-          clickCards.value.splice(i, 1);
-        } else {
-          //已選擇, 刪除解答的牌
-          ansCards.splice(index, 1);
-        }
-      });
-    }
-    //選擇
-    clickCards.value.push(ansCards.pop() as number[]);
-    //三張
-    if (ansCards.length == 0) distribute(true);
-  } else {
-    //沒答案發牌
-    if (lib.cards.length > 0) {
-      dealCards(3);
-    } else {
-      //clearInterval(Timer);
-      // lib.openMsg('遊戲結束');
-      openMsg(queMsg.value, '遊戲結束', '', '重選等級', '再玩一次');
-    }
-  }
-};
-//沒答案
-const noAns = () => {
-  let ansCards = createAns();
-  if (ansCards.length > 0) {
-    // lib.openMsg('有答案');
-    openMsg(msg.value, '有答案');
-  } else {
-    // lib.openMsg('沒答案');
-    openMsg(msg.value, '沒答案');
+    openMsg({ title: '答錯ㄌ' } as msgPack);
   }
 };
 //產生答案
@@ -320,6 +375,43 @@ function createAns(): number[][] {
     return jdg ? tmp : [];
   }
 }
+//遊戲結束重新發牌
+const again = () => {
+  start();
+  msg.value.open = false;
+};
+const restart = () => {
+  openMsg({
+    title: '確定要重新開始？',
+    btnL: {
+      label: '否',
+      event: () => {
+        msg.value.open = false;
+      },
+    },
+    btnR: { label: '是', event: again },
+  } as msgPack);
+};
+const relevel = () => {
+  openMsg({
+    title: '確定要重選等級？',
+    btnL: {
+      label: '否',
+      event: () => {
+        msg.value.open = false;
+      },
+    },
+    btnR: { label: '是', event: home },
+  } as msgPack);
+};
+//左邊補零
+function PadLeft(v: number, len: number, s: string): string {
+  let str = v.toString();
+  while (str.length < len) {
+    str = s + str;
+  }
+  return str;
+}
 </script>
 <style lang="scss">
 .blockMax {
@@ -346,8 +438,8 @@ function createAns(): number[][] {
       @extend .blockMax;
       font-size: 16px;
       justify-content: space-between;
-      align-items: baseline;
-       #menu {
+      align-items: center;
+      #menu {
         #minMenuBtn {
           > button {
             border-width: 0;
@@ -362,12 +454,13 @@ function createAns(): number[][] {
       }
       #subMenu {
         margin-right: 4px;
+        text-align: right;
       }
     }
   }
   #minMeun {
     left: -100%;
-    #minMenuBg{
+    #minMenuBg {
       @extend .lockBg;
       background: rgba(81, 94, 123, 0.5);
     }
@@ -381,6 +474,7 @@ function createAns(): number[][] {
       z-index: 1001;
       transition: 0.4s;
       transition-timing-function: ease-in-out;
+      overflow-y: auto;
       > div {
         > button {
           background: #e4e5e9;
@@ -408,14 +502,14 @@ function createAns(): number[][] {
 #lockBox {
   z-index: 999;
   #lockBg {
-    @extend .lockBg
+    @extend .lockBg;
   }
 }
 @media (min-width: 768px) {
   #park {
     #bar {
       padding: 18px 0;
-      .block{
+      .block {
         #menu {
           > div {
             &:first-child {
@@ -427,6 +521,9 @@ function createAns(): number[][] {
           }
         }
       }
+    }
+    #minMeun {
+      display: none;
     }
   }
 }

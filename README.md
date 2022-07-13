@@ -1,4 +1,4 @@
-# set_game_v1
+# set_game_v2
 
 ## Project setup
 
